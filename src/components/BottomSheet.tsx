@@ -7,6 +7,14 @@ type BottomSheetProps = {
   children: React.ReactNode;
   footer?: React.ReactNode;
   maxHeightClassName?: string;
+  backdropClassName?: string;
+  sheetClassName?: string;
+  contentClassName?: string;
+  handleClassName?: string;
+  handleBarClassName?: string;
+  headerClassName?: string;
+  closeButtonClassName?: string;
+  footerClassName?: string;
 };
 
 const CLOSE_DISTANCE = 120;
@@ -19,6 +27,14 @@ export default function BottomSheet({
   children,
   footer,
   maxHeightClassName = "max-h-[90vh]",
+  backdropClassName = "bg-black/60",
+  sheetClassName = "rounded-t-xl bg-white shadow-sheetUp",
+  contentClassName = "overflow-y-auto p-5",
+  handleClassName = "flex items-center justify-center py-2",
+  handleBarClassName = "h-1 w-10 rounded-full bg-slate-300",
+  headerClassName = "px-5 py-3 flex items-center justify-between border-b border-slate-100",
+  closeButtonClassName = "flex items-center justify-center size-8 rounded-full bg-slate-100",
+  footerClassName = "border-t border-slate-100 bg-white p-5",
 }: BottomSheetProps) {
   const [translateY, setTranslateY] = useState(0);
   const [dragging, setDragging] = useState(false);
@@ -77,7 +93,7 @@ export default function BottomSheet({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/60">
+    <div className={`fixed inset-0 z-[100] flex flex-col justify-end ${backdropClassName}`}>
       <button
         type="button"
         aria-label="关闭弹窗"
@@ -89,24 +105,24 @@ export default function BottomSheet({
         role="dialog"
         aria-modal="true"
         style={sheetStyle}
-        className={`relative z-10 overflow-hidden rounded-t-2xl bg-white shadow-sheetUp ${maxHeightClassName} flex flex-col`}
+        className={`relative z-10 overflow-hidden ${sheetClassName} ${maxHeightClassName} flex flex-col`}
       >
         <div
-          className="flex cursor-grab items-center justify-center py-2 active:cursor-grabbing"
+          className={`shrink-0 cursor-grab active:cursor-grabbing ${handleClassName}`}
           onPointerDown={(e) => beginDrag(e.clientY)}
           onPointerMove={(e) => moveDrag(e.clientY)}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
         >
-          <div className="h-1 w-10 rounded-full bg-slate-300" />
+          <div className={handleBarClassName} />
         </div>
 
         {title ? (
-          <header className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
+          <header className={`shrink-0 ${headerClassName}`}>
             <h2 className="text-lg font-bold text-slate-900">{title}</h2>
             <button
               type="button"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100"
+              className={closeButtonClassName}
               onClick={onClose}
             >
               <span className="material-symbols-outlined text-slate-600">close</span>
@@ -114,8 +130,8 @@ export default function BottomSheet({
           </header>
         ) : null}
 
-        <div className="no-scrollbar overflow-y-auto px-5 py-4">{children}</div>
-        {footer ? <div className="border-t border-slate-100 bg-white p-5">{footer}</div> : null}
+        <div className={`no-scrollbar min-h-0 flex-1 ${contentClassName}`}>{children}</div>
+        {footer ? <div className={`shrink-0 ${footerClassName}`}>{footer}</div> : null}
       </section>
     </div>
   );

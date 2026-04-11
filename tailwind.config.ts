@@ -9,7 +9,9 @@ export default {
         accent: "#FF9800",
         secondary: "#ec5b13",
         wechatGreen: "#07C160",
-        backgroundLight: "#f8f6f6",
+        // stitch/_13 uses #F7F7F7 while some sheets use #f8f6f6
+        backgroundLight: "#F7F7F7",
+        backgroundLightAlt: "#f8f6f6",
         backgroundDark: "#221610",
       },
       fontFamily: {
@@ -25,7 +27,7 @@ export default {
       },
       boxShadow: {
         iosCard: "0 4px 20px rgba(0, 0, 0, 0.05)",
-        bottomBar: "0 -4px 10px rgba(0,0,0,0.05)",
+        bottomBar: "0 -4px 20px rgba(0,0,0,0.05)",
         sheetUp: "0 -8px 30px rgba(0,0,0,0.12)",
       },
     },
