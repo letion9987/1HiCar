@@ -1015,6 +1015,11 @@ export default function Home() {
         </section>
 
         <div className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-md bg-white p-4 shadow-bottomBar">
+          {!hasUser ? (
+            <p className="mb-2 text-center text-xs leading-relaxed text-slate-500">
+              请获取用户信息后再预约
+            </p>
+          ) : null}
           <button
             type="button"
             disabled={!canSubmitBooking}
