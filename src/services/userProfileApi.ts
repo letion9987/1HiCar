@@ -72,7 +72,8 @@ export function clearPersistedProfile() {
 function defaultProfileUrl() {
   const v = import.meta.env.VITE_USER_PROFILE_URL;
   if (typeof v === "string" && v.trim()) return v.trim();
-  return "/mock/user-profile.json";
+  const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+  return `${base}/mock/user-profile.json`;
 }
 
 /**
