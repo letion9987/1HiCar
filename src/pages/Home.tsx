@@ -298,62 +298,89 @@ export default function Home() {
 
   // 首页：获取当前位置权限，并把定位地址作为「上车地点」默认值；标题旁展示逆地理城市。
   // 如果本次进入首页是「从地图/搜索选了上车点」回来，则不覆盖已选的上车地点（仍解析城市用于展示）。
+  // Android / GitHub Pages：须 HTTPS（github.io 满足）；高精度 GPS 易超时，失败后自动降级为网络定位并放宽超时。
   useEffect(() => {
     if (!navigator.geolocation) {
       setLocateUi({ kind: "none" });
       return;
     }
 
+    if (typeof window !== "undefined" && !window.isSecureContext) {
+      setLocateUi({ kind: "error" });
+      return;
+    }
+
     let cancelled = false;
     setLocateUi({ kind: "loading" });
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
+    const onPosition = async (pos: GeolocationPosition) => {
+      if (cancelled) return;
+
+      const ll = {
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+      };
+      setDriverLatLng(ll);
+
+      try {
+        setPickupGeocodeError("");
+        const labels = await reverseGeocodeLabels(ll);
         if (cancelled) return;
 
-        const ll = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        };
-        setDriverLatLng(ll);
-
-        try {
-          setPickupGeocodeError("");
-          const labels = await reverseGeocodeLabels(ll);
-          if (cancelled) return;
-
-          const cityText = labels.cityDisplay.trim() || labels.adminLine.trim();
-          if (cityText) {
-            setLocateUi({ kind: "city", text: cityText });
-          } else {
-            setLocateUi({ kind: "error" });
-          }
-
-          if (initialPickedRoleRef.current === "pickup") return;
-
-          const addr = labels.primary.trim();
-          if (!addr) {
-            setPickupGeocodeError("未能将当前位置解析为地址，请在搜索或地图中选点。");
-            return;
-          }
-          setPickup((prev) => (prev ? prev : { label: addr, latLng: ll }));
-        } catch (e) {
-          if (cancelled) return;
+        const cityText = labels.cityDisplay.trim() || labels.adminLine.trim();
+        if (cityText) {
+          setLocateUi({ kind: "city", text: cityText });
+        } else {
           setLocateUi({ kind: "error" });
-          if (initialPickedRoleRef.current !== "pickup") {
-            setPickupGeocodeError(describeTencentGeocoderError(e).message);
-          }
         }
-      },
-      () => {
+
+        if (initialPickedRoleRef.current === "pickup") return;
+
+        const addr = labels.primary.trim();
+        if (!addr) {
+          setPickupGeocodeError("未能将当前位置解析为地址，请在搜索或地图中选点。");
+          return;
+        }
+        setPickup((prev) => (prev ? prev : { label: addr, latLng: ll }));
+      } catch (e) {
         if (cancelled) return;
         setLocateUi({ kind: "error" });
-      },
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
+        if (initialPickedRoleRef.current !== "pickup") {
+          setPickupGeocodeError(describeTencentGeocoderError(e).message);
+        }
+      }
+    };
+
+    const onHardFail = () => {
+      if (cancelled) return;
+      setLocateUi({ kind: "error" });
+    };
+
+    const tryGet = (highAccuracy: boolean) => {
+      if (cancelled) return;
+      navigator.geolocation.getCurrentPosition(
+        (pos) => void onPosition(pos),
+        () => {
+          if (cancelled) return;
+          if (highAccuracy) {
+            tryGet(false);
+          } else {
+            onHardFail();
+          }
+        },
+        {
+          enableHighAccuracy: highAccuracy,
+          timeout: highAccuracy ? 18000 : 30000,
+          maximumAge: highAccuracy ? 0 : 300000,
+        },
+      );
+    };
+
+    const schedule = window.setTimeout(() => tryGet(true), 100);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(schedule);
     };
   }, [locateAttempt]);
 
@@ -611,9 +638,7 @@ export default function Home() {
         >
           {locateUi.kind === "loading" ? (
             <>
-              <span className="material-symbols-outlined animate-spin text-[16px] leading-none">
-                progress_activity
-              </span>
+              <span className="material-symbols-outlined animate-spin text-[16px] leading-none">*</span>
               <span className="shrink-0">定位中</span>
             </>
           ) : (
@@ -652,7 +677,7 @@ export default function Home() {
             >
               {profileFetchLoading ? (
                 <span className="material-symbols-outlined animate-spin text-[22px] text-primary">
-                  progress_activity
+                  *
                 </span>
               ) : hasUser && profile ? (
                 <img

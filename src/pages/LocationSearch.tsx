@@ -231,7 +231,7 @@ export default function LocationSearch() {
           >
             <span className="material-symbols-outlined text-2xl">arrow_back_ios_new</span>
           </button>
-          <div className="flex h-10 flex-1 items-center rounded-lg bg-slate-100 px-3">
+          <div className="flex h-10 flex-1 items-center rounded-lg bg-slate-100 px-3 focus-within:outline-none focus-within:ring-0">
             <span className="material-symbols-outlined mr-2 text-xl text-slate-400">search</span>
             <input
               value={keyword}
@@ -240,7 +240,7 @@ export default function LocationSearch() {
                 setErrorText("");
                 setKeyword(e.target.value);
               }}
-              className="w-full border-none bg-transparent p-0 text-base placeholder:text-slate-400 focus:ring-0"
+              className="w-full border-0 border-none bg-transparent p-0 text-base shadow-none outline-none ring-0 placeholder:text-slate-400 focus:border-0 focus:shadow-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0"
               placeholder={placeholder}
             />
             <div className="mx-3 h-4 w-[1px] bg-slate-300" />
@@ -369,7 +369,7 @@ export default function LocationSearch() {
                   className="material-symbols-outlined text-[14px] text-slate-400 animate-spin"
                   aria-label="加载中"
                 >
-                  progress_activity
+                  *
                 </span>
               )}
             </div>
