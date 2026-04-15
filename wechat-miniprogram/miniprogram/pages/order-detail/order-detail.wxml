@@ -1,0 +1,324 @@
+<page-meta page-style="{{settlementOpen || confirmKind ? 'overflow: hidden;' : ''}}" />
+<!-- 结算半屏 / 确认框打开时先拦截返回，再允许退页（基础库 ≥2.16；鸿蒙暂不拦截） -->
+<page-container
+  show="{{settlementOpen || confirmKind.length > 0}}"
+  overlay="{{false}}"
+  position="bottom"
+  round="{{false}}"
+  z-index="1"
+  custom-style="height:0;width:100%;background:transparent;box-shadow:none;"
+  bind:beforeleave="onOverlayPageContainerBeforeLeave"
+/>
+
+<view class="od-root">
+<view class="nav-wrap">
+  <view class="status-bar-fill" style="height: {{statusBarHeight}}px;" />
+  <view class="nav-bar">
+    <view class="nav-side nav-back" bindtap="onNavBack">
+      <text class="ms ms-nav-ico">arrow_back</text>
+    </view>
+    <view class="nav-title-col">
+      <text class="nav-title-main">订单详情</text>
+      <text class="nav-title-sub" wx:if="{{order && id}}">订单号：{{id}}</text>
+    </view>
+    <view wx:if="{{order}}" class="nav-side nav-more" bindtap="onNavMore">
+      <text class="ms ms-nav-ico ms-nav-more">more_horiz</text>
+    </view>
+    <view wx:else class="nav-side nav-placeholder" />
+  </view>
+</view>
+
+<scroll-view wx:if="{{order}}" scroll-y class="od-scroll" enhanced="{{true}}" show-scrollbar="{{false}}" bounces="{{true}}">
+<view class="page od-page-inner">
+  <view class="hero card hero-card">
+    <block wx:if="{{status === 'completed'}}">
+      <view class="hero-row">
+        <view class="hero-icon-wrap ok">
+          <text class="ms ms-hero-ico">check_circle</text>
+        </view>
+        <view class="hero-mid">
+          <text class="hero-t">行程已完成</text>
+          <text class="hero-s">感谢您选择包车易服务</text>
+        </view>
+        <view class="hero-side">
+          <text class="hero-s2">完成时间</text>
+          <text class="hero-t2">{{completedAtLabel}}</text>
+        </view>
+      </view>
+    </block>
+    <block wx:elif="{{status === 'cancelled'}}">
+      <view class="hero-row-between">
+        <view class="hero-col">
+          <text class="pill pill-neutral">{{statusBadge}}</text>
+          <text class="hero-t hero-t--xl">{{statusText}}</text>
+          <text class="hero-s">该订单已取消，可删除记录</text>
+        </view>
+        <view class="hero-icon-wrap muted">
+          <text class="ms ms-hero-cancel">cancel</text>
+        </view>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="hero-row-between">
+        <view class="hero-col">
+          <text class="pill warn">{{statusBadge}}</text>
+          <text class="hero-t hero-t--xl">{{statusText}}</text>
+        </view>
+        <view class="hero-icon-wrap primary">
+          <text class="ms ms-hero-car">directions_car</text>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <view class="map-section" wx:if="{{order.pickupLatLng}}">
+    <map
+      class="map map-scroll-passthrough"
+      latitude="{{mapLat}}"
+      longitude="{{mapLng}}"
+      scale="{{mapScale}}"
+      show-location="{{false}}"
+      enable-zoom="{{false}}"
+      enable-scroll="{{false}}"
+      enable-rotate="{{false}}"
+      show-compass="{{false}}"
+      markers="{{mapMarkers}}"
+      polyline="{{mapPolyline}}"
+      include-points="{{mapIncludePoints}}"
+    />
+  </view>
+  <view wx:else class="map-placeholder" />
+
+  <view class="card block">
+    <view class="veh-row">
+      <text class="veh-t">{{vehicleLabel}}</text>
+      <view class="veh-ph" />
+    </view>
+    <view class="row">
+      <text class="ms ms-row-ico">schedule</text>
+      <view>
+        <text class="row-v">{{useTimeLabel}}</text>
+        <text class="row-k">预约出发时间</text>
+      </view>
+    </view>
+    <view class="row">
+      <text class="ms ms-row-ico">group</text>
+      <view>
+        <text class="row-v">{{passengers}}人</text>
+        <text class="row-k">乘车人数</text>
+      </view>
+    </view>
+    <view class="row" wx:if="{{showRemark}}">
+      <text class="ms ms-row-ico">notes</text>
+      <view>
+        <text class="row-v sm">{{remarkLine}}</text>
+        <text class="row-k">行程备注</text>
+      </view>
+    </view>
+    <view class="row">
+      <view class="dot p" />
+      <text class="addr">{{fromLabel}}</text>
+    </view>
+    <view class="row row-last">
+      <view class="dot d" />
+      <text class="addr">{{toLabel}}</text>
+    </view>
+  </view>
+
+  <view class="card block fee-block {{hasSettlement && snap ? 'fee-block--settle-gap' : ''}}">
+    <view class="fee-hd-row {{hasSettlement && snap ? 'fee-hd-row--loose' : ''}}">
+      <text class="fee-hd">费用明细</text>
+      <text class="ms ms-info">info</text>
+    </view>
+
+    <block wx:if="{{hasSettlement && snap}}">
+      <block wx:if="{{pricingMode === 'temporary'}}">
+        <view class="fee-row">
+          <text class="fee-k">{{snap.baseLineLabel}}</text>
+          <text class="fee-v">{{snap.baseYuanStr}}</text>
+        </view>
+        <view class="fee-row">
+          <text class="fee-k">{{snap.emptyLineLabel}}</text>
+          <text class="fee-v">{{snap.emptyYuanStr}}</text>
+        </view>
+      </block>
+      <block wx:elif="{{pricingMode === 'package'}}">
+        <view class="fee-row">
+          <text class="fee-k">套餐预估（8h / 200km）</text>
+          <text class="fee-v">{{snap.packageYuanStr}}</text>
+        </view>
+      </block>
+      <block wx:else>
+        <view class="fee-row">
+          <text class="fee-k">{{snap.baseLineLabel}}</text>
+          <text class="fee-v">{{snap.comboYuanStr}}</text>
+        </view>
+      </block>
+      <view class="fee-row fee-row-sub">
+        <view class="fee-k-col">
+          <text class="fee-k">超时补差</text>
+          <text class="fee-sub">{{snap.overtimeMinutes || 0}}分钟</text>
+        </view>
+        <text class="fee-v">{{snap.overtimeYuanStr}}</text>
+      </view>
+      <view class="fee-row fee-row-sub">
+        <view class="fee-k-col">
+          <text class="fee-k">超距补差</text>
+          <text class="fee-sub">{{snap.overDistanceKm || 0}}km x {{snap.overDistanceYuanPerKmStr}}</text>
+        </view>
+        <text class="fee-v">{{snap.overDistanceYuanStr}}</text>
+      </view>
+      <view class="fee-row fee-row-toll">
+        <text class="fee-k">高速路桥费</text>
+        <text class="fee-v">{{snap.tollYuanStr}}</text>
+      </view>
+      <view class="fee-row total completed-total">
+        <text class="fee-total-label">实付总额</text>
+        <text class="accent">{{snap.paidTotalStr}}</text>
+      </view>
+    </block>
+
+    <block wx:else>
+      <view wx:for="{{tempLines}}" wx:key="k" class="fee-row">
+        <text class="fee-k">{{item.k}}</text>
+        <text class="fee-v">{{item.v}}</text>
+      </view>
+      <view wx:if="{{showLegacyCompletedExtras}}">
+        <view wx:for="{{legacyExtrasLines}}" wx:key="k" class="fee-row">
+          <text class="fee-k">{{item.k}}</text>
+          <text class="fee-v">{{item.v}}</text>
+        </view>
+      </view>
+      <view class="fee-row total">
+        <text class="fee-total-label">{{status === 'completed' ? '总额' : '预估总额'}}</text>
+        <text class="accent">{{displayTotalStr}}</text>
+      </view>
+      <view wx:if="{{showPaidDeposit}}" class="fee-row deposit-row">
+        <text class="fee-kb">已付定金</text>
+        <text class="fee-vb">{{paidDepositStr}}</text>
+      </view>
+    </block>
+  </view>
+</view>
+</scroll-view>
+
+<view class="footer" wx:if="{{order}}">
+  <block wx:if="{{status === 'ongoing'}}">
+    <button class="f-btn outline" bindtap="openSettlement">费用结算</button>
+    <button class="f-btn primary wide" bindtap="openSettlement">结束行程</button>
+  </block>
+  <block wx:elif="{{status === 'completed'}}">
+    <button class="f-btn outline" bindtap="requestDelete">删除</button>
+    <button class="f-btn primary wide" bindtap="onBookAgain">再次预约</button>
+  </block>
+  <block wx:elif="{{status === 'cancelled'}}">
+    <button class="f-btn danger full" bindtap="requestDelete">删除</button>
+  </block>
+  <block wx:else>
+    <button class="f-btn outline" bindtap="requestCancel">取消</button>
+    <button class="f-btn primary wide" bindtap="requestContactDriver">联系司机</button>
+  </block>
+</view>
+
+<view wx:if="{{settlementOpen}}" class="mask mask-web" catchtouchmove="stopTap" bindtap="closeSettlement" />
+<view wx:if="{{settlementOpen}}" class="sheet-settle sheet-web" catchtouchmove="stopTap" catchtap="stopTap">
+  <view class="sheet-handle-web">
+    <view class="sheet-handle-bar" />
+  </view>
+  <view class="sheet-hd-settle">
+    <view class="sheet-close-wrap" bindtap="closeSettlement">
+      <text class="ms ms-close">close</text>
+    </view>
+    <text class="sheet-title-settle">确认行程费用</text>
+    <view class="sheet-ph" />
+  </view>
+  <scroll-view
+    scroll-y
+    class="sheet-scroll-settle"
+    enhanced="{{true}}"
+    show-scrollbar="{{false}}"
+    bounces="{{true}}"
+  >
+    <text class="settle-intro">请核对并输入产生的额外费用</text>
+    <view class="settle-field">
+      <view class="settle-label-row">
+        <text class="settle-label">超时</text>
+        <text class="settle-hint">1元/分钟</text>
+      </view>
+      <input
+        class="settle-input"
+        type="digit"
+        value="{{settleOvertime}}"
+        placeholder=""
+        data-field="settleOvertime"
+        bindinput="onSettleInput"
+      />
+    </view>
+    <view class="settle-field">
+      <view class="settle-label-row">
+        <text class="settle-label">超距</text>
+        <text class="settle-hint">2元/公里</text>
+      </view>
+      <input
+        class="settle-input"
+        type="digit"
+        value="{{settleDistance}}"
+        data-field="settleDistance"
+        bindinput="onSettleInput"
+      />
+    </view>
+    <view class="settle-field">
+      <view class="settle-label-row">
+        <text class="settle-label">高速路桥费</text>
+        <text class="settle-hint">实报实销</text>
+      </view>
+      <input
+        class="settle-input"
+        type="digit"
+        value="{{settleToll}}"
+        data-field="settleToll"
+        bindinput="onSettleInput"
+      />
+    </view>
+    <view class="settle-summary">
+      <view class="settle-summary-hd">
+        <text class="settle-sum-label">费用合计</text>
+        <text class="settle-sum-big">¥{{settleExtrasTotalStr}}</text>
+      </view>
+      <view class="settle-break">
+        <view class="settle-break-row">
+          <text>超时 ({{settleOvertimeMin}}min × ¥1)</text>
+          <text class="settle-break-v">¥{{settleOvertimeYuanStr}}</text>
+        </view>
+        <view class="settle-break-row">
+          <text>超距 ({{settleOverDistanceKm}}km × ¥2)</text>
+          <text class="settle-break-v">¥{{settleOverDistanceYuanStr}}</text>
+        </view>
+        <view class="settle-break-row">
+          <text>路桥费</text>
+          <text class="settle-break-v">¥{{settleTollYuanStr}}</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+  <view class="sheet-ft-settle">
+    <button class="settle-confirm-btn" bindtap="confirmSettlement">确认结算</button>
+  </view>
+</view>
+
+</view>
+
+<view wx:if="{{confirmKind}}" class="cd-mask" catchtouchmove="stopTap" bindtap="onConfirmMaskTap">
+  <view class="cd-dialog" catchtap="stopTap">
+    <view class="cd-body">
+      <text class="cd-title" wx:if="{{confirmTitle}}">{{confirmTitle}}</text>
+      <text class="cd-msg">{{confirmMessage}}</text>
+    </view>
+    <view class="cd-actions">
+      <button class="cd-btn cd-cancel" bindtap="closeConfirm">再想想</button>
+      <button class="cd-btn cd-confirm {{confirmIsDanger ? 'cd-danger' : 'cd-primary'}}" bindtap="onConfirmOk">
+        {{confirmOkText}}
+      </button>
+    </view>
+  </view>
+</view>

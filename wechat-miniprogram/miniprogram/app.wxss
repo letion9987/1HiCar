@@ -1,0 +1,28 @@
+@import "./styles/material-symbols.wxss";
+
+/* 与 Web tailwind.config（primary / backgroundLight / iosCard / bottomBar）对齐，375 宽下 1px≈2rpx */
+page {
+  background-color: #f7f7f7;
+  color: #0f172a;
+  font-size: 28rpx;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Roboto,
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+.btn-primary {
+  background: #07c160;
+  color: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx 32rpx;
+  text-align: center;
+}
+
+.link {
+  color: #07c160;
+  padding: 16rpx 0;
+}
+
+/* 地图仅预览：配合 enable-zoom/enable-scroll=false，触摸穿透给外层 scroll-view 或页面滚动 */
+map.map-scroll-passthrough {
+  pointer-events: none;
+}

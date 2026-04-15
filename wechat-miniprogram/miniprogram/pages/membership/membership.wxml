@@ -1,0 +1,13 @@
+<view class="page">
+  <text class="sub">Membership Profile Comparison</text>
+  <view wx:for="{{levels}}" wx:key="name" class="card">
+    <view class="avatar-ph" />
+    <view class="mid">
+      <view class="row1">
+        <text class="name">{{item.name}}</text>
+        <text class="badge {{item.badgeClass}}">{{item.badge}}</text>
+      </view>
+      <text class="phone">{{item.phone}}</text>
+    </view>
+  </view>
+</view>

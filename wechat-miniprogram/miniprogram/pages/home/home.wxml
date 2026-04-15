@@ -1,0 +1,468 @@
+<wxs src="../../utils/wxs/array.wxs" module="arr" />
+<page-meta page-style="{{sheet ? 'overflow: hidden;' : ''}}" background-color="#ffffff" />
+<!-- 有 BottomSheet 时先拦截侧滑/Android 返回/ navigateBack，再允许退页（基础库 ≥2.16；鸿蒙暂不拦截） -->
+<page-container
+  show="{{sheet.length > 0}}"
+  overlay="{{false}}"
+  position="bottom"
+  round="{{false}}"
+  z-index="1"
+  custom-style="height:0;width:100%;background:transparent;box-shadow:none;"
+  bind:beforeleave="onSheetPageContainerBeforeLeave"
+/>
+<scroll-view
+  scroll-y
+  class="home-scroll"
+  style="height: {{scrollViewHeight}}px;"
+  enhanced="{{true}}"
+  show-scrollbar="{{false}}"
+  bounces="{{true}}"
+>
+  <view class="page-inner">
+  <view class="header card-flat" style="padding-top: {{headerPaddingTopPx}}px;">
+    <view class="header-row" bindtap="onTitleTap">
+      <view class="avatar-btn" catchtap="onAvatarTap">
+        <image wx:if="{{hasUser && profile && profile.avatarUrl}}" class="avatar-img" src="{{profile.avatarUrl}}" mode="aspectFill" />
+        <text wx:else class="avatar-placeholder">人</text>
+      </view>
+      <view class="header-text">
+        <view class="title-line">
+          <text wx:if="{{hasUser && profile}}" class="user-name">{{profile.displayName}}</text>
+          <text wx:else class="user-name">游客</text>
+          <view wx:if="{{locateKind === 'error'}}" class="loc-pill loc-pill-err loc-pill-row" bindtap="retryLocate">
+            <text class="ms ms-loc-pill-ico">location_off</text>
+            <text class="loc-pill-txt">定位失败 · 重试</text>
+          </view>
+          <view wx:elif="{{locateKind === 'loading'}}" class="loc-pill loc-pill-row">
+            <text class="ms ms-loc-pill-ico ms-loc-spin">sync</text>
+            <text class="loc-pill-txt">定位中</text>
+          </view>
+          <view wx:elif="{{locateKind === 'city'}}" class="loc-pill loc-pill-row">
+            <text class="ms ms-loc-pill-ico">location_on</text>
+            <text class="loc-pill-txt loc-pill-txt-ellipsis">{{locateText}}</text>
+          </view>
+        </view>
+        <text class="sub-line {{hasUser && profile ? '' : 'sub-line-guest'}}">{{hasUser && profile ? '包车易 · 专业包车服务' : '专业包车服务'}}</text>
+      </view>
+    </view>
+    <view class="mile-row">
+      <view>
+        <text class="mile-label">今日可用里程</text>
+        <text class="mile-val">200km</text>
+      </view>
+      <view class="mile-badge">
+        <text class="mile-badge-t">可约</text>
+        <view class="dot-pulse" />
+      </view>
+    </view>
+  </view>
+
+  <view class="section card">
+    <view class="cal-nav">
+      <button class="icon-btn" disabled="{{weekDisabledPrev}}" bindtap="onWeekPrev">‹</button>
+      <text class="cal-title">{{calendarCardTitle}}</text>
+      <button class="icon-btn" disabled="{{weekDisabledNext}}" bindtap="onWeekNext">›</button>
+    </view>
+    <view class="cal-grid">
+      <text class="cal-head" wx:for="{{['日','一','二','三','四','五','六']}}" wx:key="*this">{{item}}</text>
+      <block wx:for="{{calendarDays}}" wx:key="key">
+        <view wx:if="{{item.muted}}" class="cal-cell cal-muted">{{item.dateNum}}</view>
+        <view wx:elif="{{item.isToday}}" class="cal-cell cal-today">
+          <text>{{item.dateNum}}</text>
+          <text class="cal-sub">今天</text>
+        </view>
+        <view wx:else class="cal-cell">
+          <text>{{item.dateNum}}</text>
+          <text class="cal-sub {{item.sub === '已约' ? 'sub-muted' : 'sub-ok'}}">{{item.sub}}</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <view class="map-wrap card">
+    <map
+      class="map map-scroll-passthrough"
+      latitude="{{mapLat}}"
+      longitude="{{mapLng}}"
+      scale="{{mapScale}}"
+      show-location="{{false}}"
+      enable-zoom="{{false}}"
+      enable-scroll="{{false}}"
+      enable-rotate="{{false}}"
+      show-compass="{{false}}"
+      markers="{{mapMarkers}}"
+      polyline="{{mapPolyline}}"
+      include-points="{{mapIncludePoints}}"
+    />
+  </view>
+
+  <view class="section card loc-card">
+    <view class="loc-row" bindtap="onPickupTap">
+      <view class="dot dot-pickup" />
+      <view class="loc-body">
+        <text class="loc-label">上车地点</text>
+        <text class="loc-val {{pickup ? '' : 'placeholder'}}">{{pickup ? pickup.label : '请选择上车地点'}}</text>
+        <text wx:if="{{pickupGeocodeError && !pickup}}" class="loc-warn">{{pickupGeocodeError}}</text>
+      </view>
+      <text class="ms ms-sm ms-slate-light">chevron_right</text>
+    </view>
+    <view class="loc-connector" />
+    <view class="loc-row" bindtap="onDropoffTap">
+      <view class="dot dot-dropoff" />
+      <view class="loc-body">
+        <text class="loc-label">下车地点</text>
+        <text class="loc-val {{dropoff ? '' : 'placeholder'}}">{{dropoff ? dropoff.label : '请选择下车地点'}}</text>
+      </view>
+      <text class="ms ms-sm ms-slate-light">chevron_right</text>
+    </view>
+  </view>
+
+  <view class="section card rows rows-web">
+    <view class="row row-web" data-sheet="time" bindtap="openSheet">
+      <view class="row-left">
+        <text class="ms ms-sm ms-slate">schedule</text>
+        <text class="row-t">出发时间</text>
+      </view>
+      <view class="row-right">
+        <text class="row-v-strong">{{selectedTimeCardText}}</text>
+        <text class="ms ms-sm ms-slate-light">chevron_right</text>
+      </view>
+    </view>
+    <view class="row row-web" data-sheet="time" bindtap="openSheet">
+      <view class="row-left">
+        <text class="ms ms-sm ms-slate">person</text>
+        <text class="row-t">乘车人数</text>
+      </view>
+      <view class="row-right">
+        <text class="row-v-strong">{{passengers}}人</text>
+        <text class="ms ms-sm ms-slate-light">chevron_right</text>
+      </view>
+    </view>
+    <view class="row row-web row-last" data-sheet="remark" bindtap="openSheet">
+      <view class="row-left">
+        <text class="ms ms-sm ms-slate">edit_note</text>
+        <text class="row-t">行程备注</text>
+      </view>
+      <view class="row-right">
+        <text class="row-v-strong row-remark">{{remarkSummary}}</text>
+        <text class="ms ms-sm ms-slate-light">chevron_right</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="section card fee fee-web">
+    <view class="fee-head">
+      <text class="fee-title">费用明细</text>
+      <view class="fee-toggle">
+        <view class="tog {{pricingMode === 'package' ? 'tog-on' : ''}}" bindtap="onPricingPackage">8h / 200km</view>
+        <view class="tog {{pricingMode === 'temporary' ? 'tog-on' : ''}}" bindtap="onPricingTemp">临时包车</view>
+      </view>
+    </view>
+    <block wx:if="{{pricingMode === 'package'}}">
+      <view class="fee-line"><text class="fee-k">基础行程 (含200km)</text><text class="fee-num">¥0.00</text></view>
+      <view class="fee-line"><text class="fee-k">空驶补偿 (套餐内免收)</text><text class="fee-num">¥0.00</text></view>
+      <view class="fee-line fee-total fee-total-web">
+        <text class="fee-kb">预估总价</text>
+        <text class="fee-big">¥{{PACKAGE_TOTAL_YUAN}}</text>
+      </view>
+    </block>
+    <block wx:else>
+      <text wx:if="{{!pickup || !dropoff || !pickup.latLng || !dropoff.latLng}}" class="fee-hint">请选择上车点与下车点后，按驾车里程估算费用</text>
+      <text wx:if="{{tempQuote.loading}}" class="fee-hint fee-hint-muted">正在计算路线里程…</text>
+      <text wx:if="{{tempQuote.fallback && pickup && dropoff && pickup.latLng && dropoff.latLng && !tempQuote.loading}}" class="fee-warn">路线服务不可用，已按直线距离粗略估算</text>
+      <view class="fee-line">
+        <text class="fee-k">基础行程（{{tempBaseKmStr}}km × {{opPerKm}}）</text>
+        <text class="fee-num">¥{{tempBaseYuanStr}}</text>
+      </view>
+      <view class="fee-line">
+        <text class="fee-k">空驶补偿（{{driverLatLng ? tempDeadKmStr + 'km × ' + deadPerKm + ' × ' + deadMul : '无定位，未计空驶'}}）</text>
+        <text class="fee-num">¥{{tempEmptyYuanStr}}</text>
+      </view>
+      <view class="fee-line fee-total fee-total-web">
+        <text class="fee-kb">预估总价</text>
+        <text class="fee-big">¥{{tempTotalYuanStr}}</text>
+      </view>
+    </block>
+  </view>
+  </view>
+</scroll-view>
+
+  <view class="footer-bar">
+    <text wx:if="{{!hasUser}}" class="footer-hint">请先授权手机号并完善头像与昵称</text>
+    <button
+      class="footer-btn {{canSubmitBooking ? '' : 'disabled'}}"
+      disabled="{{!canSubmitBooking}}"
+      bindtap="openSheet"
+      data-sheet="deposit"
+    >
+      立即预约
+    </button>
+  </view>
+
+<view wx:if="{{sheet}}" class="mask mask-web" catchtouchmove="preventMove" bindtap="onMaskTap" />
+<view wx:if="{{sheet === 'time'}}" class="sheet sheet-web sheet-time" catchtouchmove="preventMove" catchtap="">
+    <view class="sheet-handle sheet-handle-web" catchtouchmove="preventMove">
+      <view class="sheet-handle-bar" />
+    </view>
+    <view class="sheet-hd sheet-hd-web">
+      <view class="sheet-close-wrap" bindtap="closeSheet">
+        <text class="ms ms-slate ms-sheet-close">close</text>
+      </view>
+      <text class="sheet-title sheet-title-web">选择出发时间和人数</text>
+      <view class="sheet-placeholder" />
+    </view>
+    <scroll-view scroll-y class="sheet-body sheet-body-time" enhanced="{{true}}" show-scrollbar="{{false}}" bounces="{{true}}">
+      <view class="time-sheet-stack">
+        <view class="blk blk-time">
+          <view class="blk-head blk-head-web">
+            <text class="blk-t blk-t-web">出发时间</text>
+            <text class="blk-s blk-s-web">请提前合理规划好时间</text>
+          </view>
+          <view class="time-wheel-wrap" wx:if="{{wheelDateItems.length}}">
+            <view class="time-wheel-highlight" />
+            <view class="time-wheel-row">
+              <scroll-view
+                class="time-wheel-col"
+                scroll-y
+                enhanced="{{true}}"
+                show-scrollbar="{{false}}"
+                scroll-top="{{wheelScrollTop0}}"
+                scroll-with-animation="{{wheelScrollAnim}}"
+                bindscroll="onWheelScrollDate"
+              >
+                <view class="time-wheel-pad" style="height: {{wheelPadPxNum}}px;" />
+                <view
+                  wx:for="{{wheelDateItems}}"
+                  wx:key="value"
+                  class="time-wheel-cell {{index === wheelDisplayDateIdx ? 'time-wheel-cell-on' : 'time-wheel-cell-off'}}"
+                  style="height: {{wheelItemPxNum}}px;"
+                  data-idx="{{index}}"
+                  catchtap="onWheelDateTap"
+                >{{item.label}}</view>
+                <view class="time-wheel-pad" style="height: {{wheelPadPxNum}}px;" />
+              </scroll-view>
+              <scroll-view
+                class="time-wheel-col"
+                scroll-y
+                enhanced="{{true}}"
+                show-scrollbar="{{false}}"
+                scroll-top="{{wheelScrollTop1}}"
+                scroll-with-animation="{{wheelScrollAnim}}"
+                bindscroll="onWheelScrollHour"
+              >
+                <view class="time-wheel-pad" style="height: {{wheelPadPxNum}}px;" />
+                <view
+                  wx:for="{{wheelHourItems}}"
+                  wx:key="value"
+                  class="time-wheel-cell {{index === wheelDisplayHourIdx ? 'time-wheel-cell-on' : 'time-wheel-cell-off'}}"
+                  style="height: {{wheelItemPxNum}}px;"
+                  data-idx="{{index}}"
+                  catchtap="onWheelHourTap"
+                >{{item.label}}</view>
+                <view class="time-wheel-pad" style="height: {{wheelPadPxNum}}px;" />
+              </scroll-view>
+              <scroll-view
+                class="time-wheel-col"
+                scroll-y
+                enhanced="{{true}}"
+                show-scrollbar="{{false}}"
+                scroll-top="{{wheelScrollTop2}}"
+                scroll-with-animation="{{wheelScrollAnim}}"
+                bindscroll="onWheelScrollMinute"
+              >
+                <view class="time-wheel-pad" style="height: {{wheelPadPxNum}}px;" />
+                <view
+                  wx:for="{{wheelMinuteItems}}"
+                  wx:key="value"
+                  class="time-wheel-cell {{index === wheelDisplayMinuteIdx ? 'time-wheel-cell-on' : 'time-wheel-cell-off'}}"
+                  style="height: {{wheelItemPxNum}}px;"
+                  data-idx="{{index}}"
+                  catchtap="onWheelMinuteTap"
+                >{{item.label}}</view>
+                <view class="time-wheel-pad" style="height: {{wheelPadPxNum}}px;" />
+              </scroll-view>
+            </view>
+          </view>
+        </view>
+        <view class="blk blk-pax">
+          <view class="blk-head blk-head-web">
+            <text class="blk-t blk-t-web">乘车人数</text>
+            <text class="blk-s blk-s-web">婴幼儿、儿童需一同计入乘车人数</text>
+          </view>
+          <view class="pax-row">
+            <view class="pax-row-left">
+              <text class="ms ms-pax-ico">group</text>
+              <text class="pax-row-label">乘车人数</text>
+            </view>
+            <view class="pax-row-actions">
+              <button class="pax-btn pax-btn-minus" hover-class="none" bindtap="onPassengerMinus">
+                <text class="ms ms-step">remove</text>
+              </button>
+              <text class="pax-num">{{passengers}}</text>
+              <button class="pax-btn pax-btn-plus" hover-class="none" bindtap="onPassengerPlus">
+                <text class="ms ms-step ms-step-plus">add</text>
+              </button>
+            </view>
+          </view>
+          <view class="quick-n quick-n-web">
+            <view wx:for="{{[1,2,3,4]}}" wx:key="*this" class="qn {{passengers === item ? 'qn-on' : ''}}" data-n="{{item}}" bindtap="onPassengerQuick">{{item}}人</view>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+    <view class="sheet-ft sheet-ft-web">
+      <button class="sheet-ok sheet-ok-web" hover-class="none" bindtap="closeSheet">确定</button>
+    </view>
+</view>
+
+<view wx:if="{{sheet === 'remark'}}" class="sheet sheet-web" catchtouchmove="preventMove" catchtap="">
+    <view class="sheet-handle sheet-handle-web" catchtouchmove="preventMove">
+      <view class="sheet-handle-bar" />
+    </view>
+    <view class="sheet-hd sheet-hd-web">
+      <view class="sheet-close-wrap" bindtap="closeSheet">
+        <text class="ms ms-slate">close</text>
+      </view>
+      <text class="sheet-title sheet-title-web">行程备注</text>
+      <view class="sheet-placeholder" />
+    </view>
+    <scroll-view scroll-y class="sheet-body" enhanced="{{true}}" show-scrollbar="{{false}}" bounces="{{true}}">
+      <text class="tag-hd">宠物与行李</text>
+      <view class="tags">
+        <view wx:for="{{remarkTagsA}}" wx:key="*this" class="tag {{arr.contains(selectedTags, item) ? 'tag-on' : ''}}" data-tag="{{item}}" bindtap="toggleTag">{{item}}</view>
+      </view>
+      <text class="tag-hd">其他需求</text>
+      <view class="tags">
+        <view wx:for="{{remarkTagsB}}" wx:key="*this" class="tag {{arr.contains(selectedTags, item) ? 'tag-on' : ''}}" data-tag="{{item}}" bindtap="toggleTag">{{item}}</view>
+      </view>
+      <textarea class="remark-area" value="{{remarkText}}" bindinput="onRemarkInput" placeholder="请输入其他补充信息…" />
+    </scroll-view>
+    <view class="sheet-ft sheet-ft-web">
+      <button class="sheet-ok sheet-ok-web sheet-ok-shadow" bindtap="closeSheet">确定</button>
+    </view>
+</view>
+
+<!-- 勿在整块 sheet 上 catchtouchmove：会干扰 type=nickname 等原生输入；昵称移出 scroll-view 避免 enhanced 滚动层抢焦点 -->
+<view wx:if="{{sheet === 'profile'}}" class="sheet sheet-web sheet-profile">
+  <view class="sheet-handle sheet-handle-web" catchtouchmove="preventMove">
+    <view class="sheet-handle-bar" />
+  </view>
+  <view class="sheet-hd sheet-hd-web">
+    <view class="sheet-close-wrap" bindtap="closeSheet">
+      <text class="ms ms-slate">close</text>
+    </view>
+    <text class="sheet-title sheet-title-web">完善资料</text>
+    <view class="sheet-placeholder" />
+  </view>
+  <!-- ① getPhoneNumber（勿放 form 内）② 头像昵称；chooseAvatar 勿放 scroll-view/form -->
+  <view class="profile-sheet-top">
+    <block wx:if="{{!profilePhoneBound}}">
+      <text class="profile-hint">请先授权微信绑定手机号，用于订单联系与安全验证；完成后可设置头像与昵称。能力说明见微信「手机号快速验证」组件文档。</text>
+      <button
+        type="default"
+        class="profile-phone-btn"
+        open-type="getPhoneNumber"
+        bindgetphonenumber="onProfileGetPhoneNumber"
+        loading="{{profilePhoneLoading}}"
+        disabled="{{profilePhoneLoading}}"
+        hover-class="none"
+      >
+        授权手机号
+      </button>
+    </block>
+    <block wx:else>
+      <text class="profile-hint profile-hint-phoneok">已绑定 {{profilePhoneMasked}}，请设置头像与昵称（见「头像昵称填写」）。</text>
+      <button
+        type="default"
+        class="profile-avatar-btn"
+        open-type="chooseAvatar"
+        bindchooseavatar="onProfileChooseAvatar"
+        hover-class="none"
+      >
+        <image class="profile-avatar-preview" src="{{profileDraftAvatar || profileAvatarPlaceholder}}" mode="aspectFill" />
+      </button>
+      <text class="profile-avatar-tip">点击圆形区域选择头像</text>
+    </block>
+  </view>
+  <form wx:if="{{profilePhoneBound}}" bindsubmit="onProfileFormSubmit" class="profile-form">
+    <view class="profile-field profile-field-nickname">
+      <text class="profile-label">昵称</text>
+      <input
+        class="profile-nickname-input"
+        type="nickname"
+        name="nickName"
+        placeholder="请输入昵称"
+        confirm-type="done"
+        adjust-position="{{true}}"
+      />
+    </view>
+    <view class="sheet-ft sheet-ft-web">
+      <button
+        class="sheet-ok sheet-ok-web"
+        form-type="submit"
+        loading="{{profileSubmitting}}"
+        disabled="{{profileSubmitting}}"
+        hover-class="none"
+      >
+        保存
+      </button>
+    </view>
+  </form>
+</view>
+
+<view wx:if="{{sheet === 'deposit'}}" class="sheet sheet-tall sheet-web" catchtouchmove="preventMove" catchtap="">
+    <view class="sheet-handle sheet-handle-web" catchtouchmove="preventMove">
+      <view class="sheet-handle-bar" />
+    </view>
+    <view class="sheet-hd sheet-hd-web">
+      <view class="sheet-close-wrap" bindtap="closeSheet">
+        <text class="ms ms-slate">close</text>
+      </view>
+      <text class="sheet-title sheet-title-web">确认预约并支付定金</text>
+      <view class="sheet-placeholder" />
+    </view>
+    <scroll-view scroll-y class="sheet-body sheet-body-grow" enhanced="{{true}}" show-scrollbar="{{false}}" bounces="{{true}}">
+      <view class="dep-top">
+        <text class="dep-label">应付定金</text>
+        <view class="dep-big">
+          <text class="yen">¥</text>
+          <text class="dep-num">{{depositStr}}</text>
+        </view>
+      </view>
+      <view class="dep-card">
+        <view class="dep-row"><text class="dep-row-k">预估总金额</text><text class="dep-row-v">¥{{estimatedTotalStr}}</text></view>
+        <view class="dep-row dep-row-mid">
+          <view class="dep-row-l">
+            <text class="dep-row-k">定金比例</text>
+            <text class="ms dep-info-ico">info</text>
+          </view>
+          <text class="dep-row-v">20%</text>
+        </view>
+        <view class="dep-row"><text class="dep-row-k">空驶补偿金额</text><text class="dep-row-v">¥{{emptyPriceStr}}</text></view>
+        <view class="dep-row dep-strong"><text class="dep-row-k">最终定金</text><text class="dep-row-v primary">¥{{depositStr}}</text></view>
+      </view>
+      <view class="dep-rules">
+        <view class="dep-rule-row">
+          <text class="ms dep-rule-ico">verified_user</text>
+          <view class="dep-rule-body">
+            <text class="dep-rule-t">定金计算规则</text>
+            <text class="dep-rule-s">总金额的20%且不低于空驶补偿金额。</text>
+          </view>
+        </view>
+        <view class="dep-rule-row">
+          <text class="ms dep-rule-ico">assignment_return</text>
+          <view class="dep-rule-body">
+            <text class="dep-rule-t">退款说明</text>
+            <text class="dep-rule-s">如行程未成行，定金将按原路退回您的支付账户。</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+    <view class="sheet-ft sheet-ft-col sheet-ft-web">
+      <button class="pay-btn" bindtap="onConfirmDeposit">
+        <text class="ms pay-wallet">account_balance_wallet</text>
+        <text class="pay-btn-t">微信支付 ¥{{depositStr}}</text>
+      </button>
+      <text class="pay-agree">支付即表示同意《包车服务协议》</text>
+    </view>
+</view>

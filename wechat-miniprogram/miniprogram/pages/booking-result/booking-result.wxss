@@ -1,0 +1,281 @@
+.status-bar-fill {
+  width: 100%;
+  background: #fff;
+}
+
+.page-br {
+  height: 100vh;
+  background: #f7f7f7;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* Web: header border-b border-slate-100 bg-white p-4 */
+.nav-hd {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 80rpx 1fr 80rpx;
+  align-items: center;
+  padding: 32rpx;
+  background: #fff;
+  border-bottom: 1rpx solid #f1f5f9;
+}
+
+.nav-close {
+  width: 80rpx;
+  height: 80rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-ph {
+  width: 80rpx;
+}
+
+.ms-nav {
+  font-family: "Material Symbols Outlined";
+  font-size: 48rpx;
+  color: #0f172a;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+/* Web: text-lg font-bold；三栏网格左右 80rpx 与 size-10 关闭键对齐 */
+.nav-title {
+  text-align: center;
+  font-size: 36rpx;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #0f172a;
+}
+
+.br-scroll {
+  flex: 1;
+  height: 0;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120rpx 48rpx;
+  min-height: 50vh;
+}
+
+.state-t {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 16rpx;
+}
+
+.state-s {
+  font-size: 26rpx;
+  color: #64748b;
+  text-align: center;
+  line-height: 1.5;
+  margin-bottom: 48rpx;
+}
+
+/* Web: px-6 pb-8 pt-12 成功区 */
+.success-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 96rpx 48rpx 64rpx;
+  box-sizing: border-box;
+}
+
+/* Web: mb-6 p-4 rounded-full bg-primary/10 */
+.ok-icon-wrap {
+  margin-bottom: 48rpx;
+  padding: 32rpx;
+  border-radius: 50%;
+  background: rgba(7, 193, 96, 0.1);
+}
+
+.ms-ok {
+  font-family: "Material Symbols Outlined";
+  font-size: 128rpx;
+  line-height: 1;
+  color: #07c160;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+/* Web: text-2xl font-bold mb-3 */
+.ok-t {
+  font-size: 48rpx;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #0f172a;
+  margin-bottom: 24rpx;
+}
+
+/* Web: text-sm text-slate-500 leading-relaxed max-w-xs */
+.ok-s {
+  font-size: 28rpx;
+  font-weight: 400;
+  color: #64748b;
+  text-align: center;
+  line-height: 1.625;
+  max-width: 576rpx;
+}
+
+/* Web: px-4 py-2 */
+.detail-wrap {
+  padding: 16rpx 32rpx 0;
+  box-sizing: border-box;
+}
+
+/* Web: rounded-xl border border-slate-100 bg-white p-5 shadow-sm */
+.detail-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 40rpx;
+  border: 1rpx solid #f1f5f9;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+/* Web: text-lg font-bold mb-4 border-b border-slate-50 pb-3 */
+.detail-hd {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 700;
+  padding-bottom: 24rpx;
+  border-bottom: 1rpx solid #f8fafc;
+  margin-bottom: 32rpx;
+  color: #0f172a;
+}
+
+/* Web: space-y-4 */
+.d-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx;
+}
+
+.d-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 32rpx;
+}
+
+.ms-row-ico {
+  font-family: "Material Symbols Outlined";
+  font-size: 40rpx;
+  color: #94a3b8;
+  margin-top: 8rpx;
+  flex-shrink: 0;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.d-body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Web: text-xs uppercase tracking-wider text-slate-400 */
+.d-k {
+  display: block;
+  font-size: 24rpx;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 8rpx;
+}
+
+/* Web: font-medium text-slate-700 */
+.d-v {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #334155;
+  line-height: 1.45;
+}
+
+/* Web: mt-6 rounded-lg aspect-video；地图不接收触摸，滑动交给 scroll-view */
+.map-box {
+  margin-top: 48rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+  width: 100%;
+  min-height: 360rpx;
+  aspect-ratio: 16 / 9;
+  position: relative;
+}
+
+.map {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Web: space-y-4 p-6 按钮区 */
+.br-actions {
+  padding: 48rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 32rpx;
+  box-sizing: border-box;
+}
+
+.btn {
+  width: 100%;
+  height: 96rpx;
+  line-height: 96rpx;
+  border-radius: 24rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.btn::after {
+  border: none;
+}
+
+.btn.primary {
+  background: #07c160;
+  color: #fff;
+  box-shadow: 0 8rpx 24rpx rgba(7, 193, 96, 0.2);
+}
+
+.btn.outline {
+  background: #fff;
+  color: #334155;
+  border: 2rpx solid #e2e8f0;
+}
+
+.btn.outline[disabled] {
+  opacity: 0.5;
+}
+
+/* Web: p-6 text-center text-xs text-slate-400 */
+.br-footer-tip {
+  padding: 0 48rpx 48rpx;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.footer-tip {
+  font-size: 24rpx;
+  color: #94a3b8;
+  line-height: 1.5;
+}
+
+.primary-tel {
+  font-size: 24rpx;
+  font-weight: 500;
+  color: #07c160;
+}
+
+.br-scroll-spacer {
+  height: calc(24rpx + env(safe-area-inset-bottom));
+  flex-shrink: 0;
+}

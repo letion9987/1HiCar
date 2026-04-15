@@ -1,0 +1,22 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/me/me",
+    "pages/order-detail/order-detail",
+    "pages/booking-result/booking-result",
+    "pages/membership/membership"
+  ],
+  "window": {
+    "navigationBarTitleText": "包车易",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F7F7F7"
+  },
+  "sitemapLocation": "sitemap.json",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于地图展示、选点与临时包车空驶估算"
+    }
+  },
+  "requiredPrivateInfos": ["getLocation", "chooseLocation"]
+}

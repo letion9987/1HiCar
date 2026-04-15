@@ -541,9 +541,9 @@ export default function OrderDetail() {
         cancelLabel="再想想"
         confirmLabel={
           confirmKind === "cancel"
-            ? "确定取消"
+            ? "取消"
             : confirmKind === "delete"
-              ? "确定删除"
+              ? "删除"
               : "确定"
         }
         confirmVariant={confirmKind === "delete" ? "danger" : "primary"}

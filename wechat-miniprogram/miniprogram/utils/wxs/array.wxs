@@ -1,0 +1,9 @@
+function contains(arr, s) {
+  if (!arr || !arr.length) return false;
+  var i = 0;
+  for (i = 0; i < arr.length; i++) {
+    if (arr[i] === s) return true;
+  }
+  return false;
+}
+module.exports.contains = contains;

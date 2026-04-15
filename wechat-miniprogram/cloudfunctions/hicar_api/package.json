@@ -1,0 +1,9 @@
+{
+  "name": "hicar_api",
+  "version": "1.0.0",
+  "description": "包车易：用户与订单云函数（微信云开发 / CloudBase）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~3.0.1"
+  }
+}

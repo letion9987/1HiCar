@@ -1,0 +1,8 @@
+.wrap {
+  padding: 80rpx;
+  text-align: center;
+}
+.tip {
+  font-size: 28rpx;
+  color: #64748b;
+}

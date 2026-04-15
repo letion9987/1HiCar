@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "个人中心",
+  "usingComponents": {},
+  "enablePullDownRefresh": true,
+  "backgroundColor": "#F7F7F7",
+  "backgroundTextStyle": "dark",
+  "onReachBottomDistance": 120
+}

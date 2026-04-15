@@ -1,0 +1,402 @@
+.page {
+  min-height: 100vh;
+  background: #f7f7f7;
+  padding-bottom: 48rpx;
+}
+
+.card {
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.identity-section {
+  margin: 0 0 24rpx;
+  padding: 48rpx;
+  background: #fff;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+}
+
+.identity-row {
+  display: flex;
+  align-items: center;
+  gap: 40rpx;
+}
+
+.id-avatar {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  border: 4rpx solid rgba(7, 193, 96, 0.2);
+  flex-shrink: 0;
+  background: #e5e7eb;
+}
+
+.id-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.id-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.id-name {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.id-membership {
+  font-size: 20rpx;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  padding: 8rpx 20rpx;
+  border-radius: 999rpx;
+  flex-shrink: 0;
+  border: none;
+}
+
+/* 与 pages/membership/membership 各等级徽章配色一致 */
+.id-mship-loading {
+  background: #e2e8f0;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.id-mship-muted {
+  background: #f1f5f9;
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.id-mship-n {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.id-mship-s {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1rpx solid #e2e8f0;
+}
+
+.id-mship-g {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1rpx solid #fde68a;
+}
+
+.id-mship-p {
+  background: #334155;
+  color: #f8fafc;
+}
+
+.id-mship-d {
+  background: linear-gradient(90deg, #8e2de2 0%, #4a00e0 100%);
+  color: #fff;
+}
+
+.id-membership-muted {
+  opacity: 0.95;
+  font-weight: 700;
+}
+
+.id-phone {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 32rpx;
+  color: #64748b;
+  font-weight: 400;
+}
+
+.tabs {
+  display: flex;
+  background: #fff;
+  border-bottom: 1rpx solid #e5e5e5;
+  margin: 0 0 16rpx;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 32rpx 0;
+  font-size: 32rpx;
+  font-weight: 500;
+  color: #64748b;
+  border-bottom: 8rpx solid transparent;
+}
+
+.tab-on {
+  font-weight: 700;
+  color: #07c160;
+  border-bottom-color: #07c160;
+}
+
+.body {
+  /* Web: space-y-4 p-4 */
+  padding: 0 32rpx 80rpx;
+}
+
+.loading {
+  text-align: center;
+  padding: 80rpx;
+  color: #94a3b8;
+}
+
+.list-footer {
+  text-align: center;
+  padding: 32rpx 0 48rpx;
+  font-size: 26rpx;
+  color: #64748b;
+}
+
+.list-footer-done {
+  color: #94a3b8;
+}
+
+.list-footer-hint {
+  color: #94a3b8;
+  font-size: 24rpx;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80rpx 40rpx;
+  min-height: 400rpx;
+  justify-content: center;
+}
+
+.empty-icon-wrap {
+  margin-bottom: 32rpx;
+  width: 256rpx;
+  height: 256rpx;
+  border-radius: 50%;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-ms {
+  font-family: "Material Symbols Outlined";
+  font-size: 120rpx;
+  color: #d4d4d4;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.empty-t {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 16rpx;
+}
+
+.empty-s {
+  font-size: 26rpx;
+  color: #94a3b8;
+  text-align: center;
+  max-width: 480rpx;
+  line-height: 1.5;
+  margin-bottom: 48rpx;
+}
+
+.empty-btn {
+  width: 320rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: #07C160;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 16rpx;
+  border: none;
+  box-shadow: 0 8rpx 24rpx rgba(7, 193, 96, 0.2);
+}
+
+.order {
+  padding: 40rpx;
+  margin-bottom: 32rpx;
+  border: 1rpx solid #f5f5f5;
+}
+
+.order-dim {
+  opacity: 0.6;
+}
+
+.order-hd {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 24rpx;
+  border-bottom: 1rpx solid #f8fafc;
+  margin-bottom: 24rpx;
+}
+
+.order-id {
+  font-size: 28rpx;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.badge {
+  font-size: 26rpx;
+  font-weight: 700;
+  padding: 8rpx 20rpx;
+  border-radius: 999rpx;
+}
+
+.badge.pending {
+  color: #ea580c;
+  background: #fff7ed;
+}
+
+.badge.ongoing {
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+.badge.completed {
+  color: #059669;
+  background: #ecfdf5;
+}
+
+.badge.cancelled {
+  color: #64748b;
+  background: #f1f5f9;
+}
+
+.order-loc {
+  margin-bottom: 16rpx;
+}
+
+.loc-row {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  margin-top: 10rpx;
+  flex-shrink: 0;
+}
+
+.dot.p {
+  background: #07C160;
+}
+
+.dot.d {
+  background: #FF9800;
+}
+
+.loc-k {
+  display: block;
+  font-size: 24rpx;
+  color: #94a3b8;
+  margin-bottom: 6rpx;
+}
+
+.loc-v {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.order-loc-muted .dot.p {
+  background: #d4d4d4;
+}
+
+.order-loc-muted .dot.d {
+  background: #d4d4d4;
+}
+
+.order-meta-row {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 24rpx;
+}
+
+.order-meta-ico {
+  font-family: "Material Symbols Outlined";
+  font-size: 40rpx;
+  color: #64748b;
+  margin-right: 16rpx;
+  margin-top: 2rpx;
+  flex-shrink: 0;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.order-dim .order-meta-ico {
+  color: #94a3b8;
+}
+
+.order-meta-t {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #475569;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.45;
+}
+
+.order-dim .order-meta-t {
+  color: #94a3b8;
+}
+
+.order-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  margin-top: 32rpx;
+}
+
+.btn-outline {
+  margin: 0;
+  padding: 0 36rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #0f172a;
+  background: #fff;
+  border: 2rpx solid #1e293b;
+  border-radius: 16rpx;
+}
+
+.btn-danger {
+  margin: 0;
+  padding: 0 36rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #ef4444;
+  background: #fff;
+  border: 2rpx solid #e5e7eb;
+  border-radius: 16rpx;
+}
+
+.btn-primary {
+  margin: 0;
+  padding: 0 36rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #fff;
+  background: #07c160;
+  border: none;
+  border-radius: 16rpx;
+  box-shadow: 0 8rpx 16rpx rgba(7, 193, 96, 0.2);
+}

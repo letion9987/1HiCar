@@ -1,0 +1,86 @@
+<view class="page-br">
+  <view class="status-bar-fill" style="height: {{statusBarHeight}}px;" />
+  <view class="nav-hd">
+    <view class="nav-close" bindtap="onClose">
+      <text class="ms ms-nav">close</text>
+    </view>
+    <text class="nav-title">预约结果</text>
+    <view class="nav-ph" />
+  </view>
+
+  <block wx:if="{{phase === 'bad' || phase === 'error'}}">
+    <view class="state">
+      <text class="state-t">{{phase === 'bad' ? '无法打开' : '提交失败'}}</text>
+      <text class="state-s">{{errMsg}}</text>
+      <button class="btn primary" bindtap="onClose">返回首页</button>
+    </view>
+  </block>
+
+  <block wx:elif="{{phase === 'ok'}}">
+    <!-- 与 Web 一致：主列可滚动，底栏与客服在滚动区内；地图见 app.wxss map-scroll-passthrough -->
+    <scroll-view scroll-y class="br-scroll" enhanced="{{true}}" show-scrollbar="{{false}}" bounces="{{true}}">
+      <view class="success-block">
+        <view class="ok-icon-wrap">
+          <text class="ms ms-ok">check_circle</text>
+        </view>
+        <text class="ok-t">预约成功</text>
+        <text class="ok-s">预约成功，请保持手机畅通，司机将尽快与您电话联系沟通详情。</text>
+      </view>
+
+      <view class="detail-wrap">
+        <view class="detail-card">
+          <text class="detail-hd">预约详情</text>
+          <view class="d-rows">
+            <view class="d-row">
+              <text class="ms ms-row-ico">directions_car</text>
+              <view class="d-body">
+                <text class="d-k">预约车型</text>
+                <text class="d-v">{{vehicleText}}</text>
+              </view>
+            </view>
+            <view class="d-row">
+              <text class="ms ms-row-ico">schedule</text>
+              <view class="d-body">
+                <text class="d-k">出发时间</text>
+                <text class="d-v">{{useTimeText}}</text>
+              </view>
+            </view>
+            <view class="d-row">
+              <text class="ms ms-row-ico">location_on</text>
+              <view class="d-body">
+                <text class="d-k">出发地点</text>
+                <text class="d-v">{{fromText}}</text>
+              </view>
+            </view>
+          </view>
+          <view class="map-box">
+            <map
+              class="map map-scroll-passthrough"
+              latitude="{{mapLat}}"
+              longitude="{{mapLng}}"
+              scale="{{mapScale}}"
+              show-location="{{false}}"
+              enable-zoom="{{false}}"
+              enable-scroll="{{false}}"
+              enable-rotate="{{false}}"
+              show-compass="{{false}}"
+              markers="{{mapMarkers}}"
+              polyline="{{mapPolyline}}"
+              include-points="{{mapIncludePoints}}"
+            />
+          </view>
+        </view>
+      </view>
+
+      <view class="br-actions">
+        <button class="btn primary" bindtap="onClose">返回首页</button>
+        <button class="btn outline" disabled="{{!orderId}}" bindtap="onViewOrder">查看订单详情</button>
+      </view>
+      <view class="br-footer-tip">
+        <text class="footer-tip">如有疑问，请拨打客服电话 </text>
+        <text class="footer-tip primary-tel">400-888-9999</text>
+      </view>
+      <view class="br-scroll-spacer" />
+    </scroll-view>
+  </block>
+</view>

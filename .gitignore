@@ -25,3 +25,7 @@ dist-ssr
 
 
 /stitch
+
+# 微信小程序云函数依赖
+wechat-miniprogram/cloudfunctions/**/node_modules/
+wechat-miniprogram/miniprogram/project.private.config.json

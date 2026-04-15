@@ -1,9 +1,18 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import ConfirmDialog from "../components/ConfirmDialog";
 import UserIdentityDisplay from "../components/UserIdentityDisplay";
 import { useUserSession } from "../contexts/UserSessionContext";
 import { useOrders } from "../hooks/useOrders";
+import { useProfileOrderPaging } from "../hooks/useProfileOrderPaging";
 import {
   clearProfileReturnContext,
   peekProfileReturnContext,
@@ -51,10 +60,20 @@ function initialProfileTab(): OrderTab {
   return peekProfileReturnContext()?.tab ?? "pending";
 }
 
+const PULL_THRESHOLD_PX = 56;
+const PULL_MAX_PX = 100;
+const PULL_DAMP = 0.42;
+const REFRESH_DONE_MS = 520;
+
+function windowScrollTop() {
+  return window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+}
+
 export default function Profile() {
   const navigate = useNavigate();
   const { profile, hasUser } = useUserSession();
-  const { orders } = useOrders();
+  const { orders, refresh } = useOrders();
+  const [listResetSig, setListResetSig] = useState(0);
 
   useEffect(() => {
     if (!hasUser) {
@@ -66,22 +85,132 @@ export default function Profile() {
     null | { kind: "cancel" | "delete"; order: OrderItem }
   >(null);
   const [pendingScrollOrderId, setPendingScrollOrderId] = useState<string | null>(null);
+  const [pullPx, setPullPx] = useState(0);
+  const [pullDragging, setPullDragging] = useState(false);
+  const [pullRefreshing, setPullRefreshing] = useState(false);
+
+  const pullRootRef = useRef<HTMLDivElement | null>(null);
+  const pullPxRef = useRef(0);
+  const pullStartYRef = useRef(0);
+  const pullActiveRef = useRef(false);
+  const pullRefreshingRef = useRef(false);
+  const confirmOpenRef = useRef(false);
+  const pullRefreshTimerRef = useRef<number | null>(null);
+  pullRefreshingRef.current = pullRefreshing;
+  confirmOpenRef.current = confirmTarget !== null;
+
+  const runPullRefresh = useCallback(() => {
+    refresh();
+    setListResetSig((s) => s + 1);
+    setPullRefreshing(true);
+    if (pullRefreshTimerRef.current != null) window.clearTimeout(pullRefreshTimerRef.current);
+    pullRefreshTimerRef.current = window.setTimeout(() => {
+      pullRefreshTimerRef.current = null;
+      setPullRefreshing(false);
+    }, REFRESH_DONE_MS);
+  }, [refresh]);
+
+  useEffect(
+    () => () => {
+      if (pullRefreshTimerRef.current != null) window.clearTimeout(pullRefreshTimerRef.current);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    const el = pullRootRef.current;
+    if (!el) return;
+
+    const damp = (dy: number) => Math.min(Math.max(0, dy) * PULL_DAMP, PULL_MAX_PX);
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (pullRefreshingRef.current || confirmOpenRef.current) return;
+      if (windowScrollTop() > 2) return;
+      pullActiveRef.current = true;
+      pullStartYRef.current = e.touches[0].clientY;
+      setPullDragging(true);
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!pullActiveRef.current || pullRefreshingRef.current || confirmOpenRef.current) return;
+      if (windowScrollTop() > 2) {
+        pullActiveRef.current = false;
+        pullPxRef.current = 0;
+        setPullPx(0);
+        setPullDragging(false);
+        return;
+      }
+      const dy = e.touches[0].clientY - pullStartYRef.current;
+      if (dy > 0) {
+        e.preventDefault();
+        const p = damp(dy);
+        pullPxRef.current = p;
+        setPullPx(p);
+      } else {
+        pullPxRef.current = 0;
+        setPullPx(0);
+      }
+    };
+
+    const onTouchEnd = () => {
+      if (!pullActiveRef.current) return;
+      pullActiveRef.current = false;
+      setPullDragging(false);
+      const p = pullPxRef.current;
+      pullPxRef.current = 0;
+      if (pullRefreshingRef.current || confirmOpenRef.current) {
+        setPullPx(0);
+        return;
+      }
+      if (p >= PULL_THRESHOLD_PX) {
+        setPullPx(0);
+        runPullRefresh();
+      } else {
+        setPullPx(0);
+      }
+    };
+
+    el.addEventListener("touchstart", onTouchStart, { passive: true });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    el.addEventListener("touchend", onTouchEnd);
+    el.addEventListener("touchcancel", onTouchEnd);
+
+    return () => {
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
+      el.removeEventListener("touchend", onTouchEnd);
+      el.removeEventListener("touchcancel", onTouchEnd);
+    };
+  }, [runPullRefresh]);
+
+  const {
+    visibleList,
+    hasMore,
+    tabListLoading,
+    loadMore,
+    expandToShowOrderForTab,
+  } = useProfileOrderPaging(orders, activeTab, listResetSig);
+
+  const tabOrderCount = useMemo(
+    () => orders.filter((item) => item.status === activeTab).length,
+    [orders, activeTab],
+  );
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const expandToShowOrderForTabRef = useRef(expandToShowOrderForTab);
+  expandToShowOrderForTabRef.current = expandToShowOrderForTab;
 
   useLayoutEffect(() => {
     const ctx = peekProfileReturnContext();
     if (!ctx) return;
     setPendingScrollOrderId(ctx.orderId);
+    expandToShowOrderForTabRef.current(ctx.tab, ctx.orderId);
   }, []);
-
-  const currentList = useMemo(
-    () => orders.filter((item) => item.status === activeTab),
-    [orders, activeTab],
-  );
 
   useEffect(() => {
     if (!pendingScrollOrderId) return;
     const targetId = pendingScrollOrderId;
-    const inList = currentList.some((o) => o.id === targetId);
+    const inList = visibleList.some((o) => o.id === targetId);
     if (!inList) {
       clearProfileReturnContext();
       setPendingScrollOrderId(null);
@@ -95,7 +224,20 @@ export default function Profile() {
       clearProfileReturnContext();
       setPendingScrollOrderId(null);
     });
-  }, [pendingScrollOrderId, currentList]);
+  }, [pendingScrollOrderId, visibleList]);
+
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el || !hasMore || tabListLoading) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMore();
+      },
+      { root: null, rootMargin: "120px", threshold: 0 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hasMore, loadMore, tabListLoading, visibleList.length, activeTab]);
 
   const requestCancel = (o: OrderItem) => {
     if (o.status !== "pending") return;
@@ -125,8 +267,36 @@ export default function Profile() {
     );
   }
 
+  const pullContentStyle: CSSProperties = {
+    transform: `translateY(${pullPx}px)`,
+    transition: pullDragging ? "none" : "transform 0.22s ease-out",
+  };
+
   return (
-    <div className="min-h-screen bg-backgroundLight font-display">
+    <div
+      ref={pullRootRef}
+      className="min-h-screen overflow-x-hidden bg-backgroundLight font-display [overscroll-behavior-y:contain]"
+    >
+      <div
+        className="pointer-events-none fixed left-1/2 top-3 z-[55] -translate-x-1/2 text-primary"
+        style={{
+          opacity:
+            pullRefreshing || pullPx > 6 ? 1 : 0,
+          transition: "opacity 0.15s ease-out",
+        }}
+        aria-hidden
+      >
+        <span
+          className={[
+            "material-symbols-outlined block text-[30px]",
+            pullRefreshing ? "animate-spin" : "",
+          ].join(" ")}
+        >
+          {pullRefreshing ? "progress_activity" : pullPx >= PULL_THRESHOLD_PX ? "refresh" : "arrow_downward"}
+        </span>
+      </div>
+
+      <div style={pullContentStyle}>
       <nav className="sticky top-0 z-50 border-b border-neutral-200 bg-white">
         <div className="flex items-center p-4">
           <button className="flex items-center text-slate-900" onClick={() => navigate(-1)}>
@@ -136,7 +306,7 @@ export default function Profile() {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-md pb-10">
+      <main className="mx-auto max-w-md pb-10" aria-busy={pullRefreshing}>
         <section className="mb-3 bg-white p-6 shadow-sm">
           <UserIdentityDisplay
             profile={profile}
@@ -165,7 +335,11 @@ export default function Profile() {
         </section>
 
         <section className="space-y-4 p-4">
-          {currentList.length === 0 ? (
+          {tabListLoading ? (
+            <div className="flex min-h-[200px] items-center justify-center text-sm text-slate-400">
+              加载中…
+            </div>
+          ) : tabOrderCount === 0 ? (
             <section className="flex min-h-[400px] flex-col items-center justify-center p-10">
               <div className="mb-6 flex size-32 items-center justify-center rounded-full bg-neutral-100">
                 <span className="material-symbols-outlined text-6xl text-neutral-300">
@@ -184,7 +358,8 @@ export default function Profile() {
               </button>
             </section>
           ) : (
-            currentList.map((o) => (
+            <>
+            {visibleList.map((o) => (
               <div
                 key={o.id}
                 id={`profile-order-${o.id}`}
@@ -285,10 +460,21 @@ export default function Profile() {
                   )}
                 </div>
               </div>
-            ))
+            ))}
+            {hasMore ? (
+              <div
+                ref={loadMoreRef}
+                className="flex h-10 items-center justify-center text-xs text-slate-400"
+                aria-hidden
+              >
+                上拉加载更多
+              </div>
+            ) : null}
+            </>
           )}
         </section>
       </main>
+      </div>
 
       <ConfirmDialog
         open={confirmTarget !== null}
@@ -299,7 +485,7 @@ export default function Profile() {
             : "确定删除该订单？删除后不可恢复。"
         }
         cancelLabel="再想想"
-        confirmLabel={confirmTarget?.kind === "cancel" ? "确定取消" : "确定删除"}
+        confirmLabel={confirmTarget?.kind === "cancel" ? "取消" : "删除"}
         confirmVariant={confirmTarget?.kind === "delete" ? "danger" : "primary"}
         onCancel={() => setConfirmTarget(null)}
         onConfirm={handleConfirmAction}
